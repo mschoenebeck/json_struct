@@ -114,7 +114,7 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <atomic>
+//#include <atomic>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -452,13 +452,15 @@ public:
   {
   }
   Callback(const Callback<T> &other)
-    : ref(other.ref.load())
+//    : ref(other.ref.load())
+    : ref(other.ref)
     , callback(other.callback)
   {
   }
   Callback &operator=(const Callback<T> &other)
   {
-    ref.store(other.ref.load());
+    //ref.store(other.ref.load());
+    ref = other.ref;
     callback = other.callback;
     return *this;
   }
@@ -472,7 +474,8 @@ public:
     --ref;
   }
 
-  std::atomic<int> ref;
+  //std::atomic<int> ref;
+  int ref;
   std::function<T> callback;
 };
 
@@ -486,7 +489,8 @@ public:
   {
     for (size_t i = 0; i < vec.size(); i++)
     {
-      if (vec[i].ref.load() == 0)
+//      if (vec[i].ref.load() == 0)
+      if (vec[i].ref == 0)
       {
         vec[i].callback = callback;
         return RefCounter<T>(i, this);
@@ -501,7 +505,8 @@ public:
   {
     for (auto &callbackHandler : vec)
     {
-      if (callbackHandler.ref.load())
+//      if (callbackHandler.ref.load())
+      if (callbackHandler.ref)
       {
         callbackHandler.callback(args...);
       }
@@ -515,7 +520,8 @@ public:
   void dec(size_t index)
   {
     assert(index < vec.size());
-    assert(vec[index].ref.load() != 0);
+    //assert(vec[index].ref.load() != 0);
+    assert(vec[index].ref != 0);
     --vec[index].ref;
   }
 
@@ -7014,6 +7020,9 @@ public:
   }
 };
 
+// mschoenebeck: 'char' type equals 'int8_t' type and leads to redefinition error in eosio-cpp
+// handlers are exactly the same anyways
+/*
 template <>
 struct TypeHandler<char>
 {
@@ -7045,7 +7054,7 @@ public:
     serializer.write(token);
   }
 };
-
+*/
 /// \private
 template <typename T>
 struct TypeHandler<Nullable<T>>
